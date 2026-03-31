@@ -1,0 +1,776 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: '#FAF8F5',
+          gold: '#D4AF37',
+          honey: '#F5B041',
+          amber: '#EB984E',
+          coral: '#F1948A',
+          forest: '#2A9D8F',
+          dark: '#2C2A29',
+          parchment: '#EFEBE1'
+        },
+        fontFamily: {
+          serif: ['Lora', 'serif'],
+          sans: ['Poppins', 'sans-serif']
+        },
+        transitionTimingFunction: {
+          'expo': 'cubic-bezier(0.19, 1, 0.22, 1)',
+        }
+      }
+    }
+  }
+</script>
+
+<!-- Iconify -->
+<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
+<!-- GSAP & Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+  :root {
+    --cursor-size: 20px;
+  }
+
+  body {
+    background-color: #FAF8F5;
+    color: #2C2A29;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* WebGL Background */
+  #webgl-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -2;
+    pointer-events: none;
+  }
+
+  /* Vague Parchment GridLines */
+  .grid-lines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image:
+      linear-gradient(rgba(44, 42, 41, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(44, 42, 41, 0.04) 1px, transparent 1px);
+    background-size: 8vw 8vw;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Global Noise Texture */
+  .noise-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    opacity: 0.4;
+    z-index: 9998;
+    pointer-events: none;
+    background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.15"/%3E%3C/svg%3E');
+  }
+
+  /* Custom Cursor */
+  .cursor-dot,
+  .cursor-outline {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    z-index: 9999;
+    pointer-events: none;
+  }
+
+  .cursor-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #D4AF37;
+    transition: width 0.2s, height 0.2s;
+  }
+
+  .cursor-outline {
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(212, 175, 55, 0.6);
+    transition: width 0.2s, height 0.2s, background-color 0.2s;
+    mix-blend-mode: difference;
+  }
+
+  /* Hover state */
+  body.hovering .cursor-outline {
+    width: 60px;
+    height: 60px;
+    background-color: rgba(241, 148, 138, 0.2);
+    border-color: transparent;
+    backdrop-filter: blur(2px);
+  }
+
+  /* Typography & Utils */
+  .text-outline {
+    -webkit-text-stroke: 1px rgba(44, 42, 41, 0.2);
+    color: transparent;
+  }
+
+  .glass-panel {
+    background: rgba(250, 248, 245, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  /* Magic Portal Clipping */
+  .magic-portal {
+    clip-path: inset(100% 0 0 0 round 4rem);
+    will-change: clip-path, transform;
+  }
+
+  /* Hide scrollbar for clean look */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #EFEBE1;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #EB984E;
+    border-radius: 4px;
+  }
+</style>
+</head>
+
+<body class="antialiased font-sans selection:bg-coral selection:text-white">
+
+  <!-- WebGL & Textures -->
+  <canvas id="webgl-canvas"></canvas>
+  <div class="grid-lines"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- Custom Cursor -->
+  <div class="cursor-dot"></div>
+  <div class="cursor-outline"></div>
+
+  <!-- Navigation -->
+  <nav class="fixed w-full top-0 z-50 glass-panel px-6 py-4 flex justify-between items-center transition-all duration-300">
+    <div class="font-serif text-xl font-medium tracking-wide text-dark hover-trigger flex items-center gap-2">
+      <iconify-icon icon="solar:magic-stick-3-bold-duotone" class="text-gold text-2xl"></iconify-icon>
+      Yu-Rong.
+    </div>
+    <div class="hidden md:flex gap-8 text-sm font-medium tracking-widest uppercase">
+      <a href="#about" class="hover:text-amber transition-colors hover-trigger">關於我</a>
+      <a href="#skills" class="hover:text-amber transition-colors hover-trigger">技能</a>
+      <a href="#works" class="hover:text-amber transition-colors hover-trigger">專案</a>
+    </div>
+    <!--  <a href="#works" class="px-5 py-2 rounded-full bg-dark text-cream text-sm font-medium hover:bg-gold transition-colors duration-300 hover-trigger">
+            Let's Talk
+        </a>-->
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center justify-center pt-20 px-6 overflow-hidden">
+    <!-- Decorative Number -->
+    <div class="absolute top-1/4 left-10 font-serif text-[15vw] leading-none text-outline select-none opacity-50 z-0">
+      00
+    </div>
+
+    <div class="container mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center z-10">
+      <div class="space-y-8 flex flex-col justify-center">
+        <div class="space-y-2">
+          <div class="flex items-center gap-3 text-amber font-medium tracking-wider text-sm uppercase hero-fade">
+            <span class="w-8 h-[1px] bg-amber"></span>
+            AI數位輔助魔法
+          </div>
+          <h1 class="font-serif text-5xl md:text-7xl font-medium leading-[1.1] text-dark hero-fade">
+            轉變 <span class="italic text-gold">魔法</span> <br>
+            視覺設計 & <br>
+            UI/UX 設計
+          </h1>
+        </div>
+
+        <p class="text-lg text-dark/70 max-w-md font-light hero-fade">
+          你好,我是 <strong class="font-medium text-dark">Elian (Yu-Rong)</strong>. 我是一位喜好繪畫插圖的數位學習者，具備視覺行銷與平面設計經驗，目前正積極精進並朝向前端設計領域邁進。
+        </p>
+
+        <div class="pt-4 hero-fade">
+          <a href="#works" class="group relative inline-flex items-center gap-4 px-8 py-4 bg-amber text-white rounded-full overflow-hidden hover-trigger">
+            <span class="relative z-10 font-medium tracking-wide">開啟我的創意夢想之地</span>
+            <iconify-icon icon="solar:arrow-right-up-linear" class="relative z-10 text-xl group-hover:rotate-45 transition-transform duration-300"></iconify-icon>
+            <div class="absolute inset-0 bg-coral transform scale-x-0 origin-left group-hover:scale-x-100 transition-transform duration-500 ease-expo z-0"></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Magic Portal Hero Image -->
+      <div class="relative flex justify-center lg:justify-end hero-fade">
+        <!-- <div class="image-upload-container">                      
+                    <img id="previewImage" src="預設的溫暖插畫.jpg" alt="我的作品預覽" >    
+                    <input type="file" id="imageInput" accept="image/*">                
+                </div>-->
+        <div class="relative w-[80%] max-w-md aspect-[3/4] rounded-t-[10rem] rounded-b-[2rem] overflow-hidden shadow-2xl shadow-gold/20 magic-portal" id="hero-portal">
+
+          <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/0e7466404061215fdc8a0867e7b3ed1c8b78780a/AI-IMG2.jpg" class="w-full h-[80%] object-cover scale-[1.1] transition-transform duration-500">
+          <div class="absolute inset-0 bg-gradient-to-t from-dark/60 to-transparent"></div>
+          <div class="absolute bottom-6 left-6 right-6 text-cream">
+            <p class="font-serif text-xl">前端學習者</p>
+            <p class="text-sm font-light opacity-80">美學與技術應用</p>
+          </div>
+        </div>
+
+        <!-- Floating Elements -->
+        <div class="absolute top-10 right-0 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl floating-anim">
+          <iconify-icon icon="simple-icons:figma" class="text-3xl text-[#F24E1E]"></iconify-icon>
+        </div>
+        <div class="absolute bottom-6 -left-6 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl floating-anim-delayed">
+          <iconify-icon icon="simple-icons:procreate" class="text-3xl text-dark"></iconify-icon>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About & Skills Section -->
+  <section id="about" class="py-24 px-6 relative z-10">
+    <div class="container mx-auto">
+      <div class="grid grid-cols-1 flex flex-col gap-16">
+
+        <!-- About Content -->
+        <div class="lg:col-span-5 space-y-8 gs-reveal">
+          <div class="flex items-center gap-4">
+            <h2 class="font-serif text-4xl md:text-5xl">01 / 關於我</h2>
+            <div class="h-[1px] flex-grow bg-dark/20"></div>
+          </div>
+          <p class="text-lg leading-relaxed text-dark/80 font-light">
+            我是一位喜好繪畫插圖的數位學習者。過去累積了豐富的視覺行銷與平面設計經驗，深知如何透過視覺張力抓住受眾眼球。
+          </p>
+          <p class="text-lg leading-relaxed text-dark/80 font-light">
+            現在，我正積極精進邏輯思維，朝向 <strong class="text-amber font-medium">前端設計領域</strong> 邁進。期許能將感性的插畫美學，注入理性的介面體驗中，創造出既有溫度又實用的數位產品。
+          </p>
+
+          <div class="flex gap-4 pt-4">
+            <div class="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:bg-gold hover:text-white transition-colors hover-trigger">
+              <iconify-icon icon="simple-icons:behance" class="text-xl"></iconify-icon>
+            </div>
+            <div class="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:bg-gold hover:text-white transition-colors hover-trigger">
+              <iconify-icon icon="simple-icons:pinterest" class="text-xl"></iconify-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div id="skills" class="gs-reveal space-y-8">
+
+          <div class="flex items-center gap-4">
+            <h2 class="font-serif text-4xl md:text-5xl">02 / 專業技能</h2>
+            <div class="h-[1px] flex-grow bg-dark/20"></div>
+          </div>
+
+          <div class="glass-panel p-8 md:p-12 rounded-[2rem] shadow-lg shadow-amber/5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                    <iconify-icon icon="simple-icons:adobeillustrator" class="text-[#FF9A00] text-xl"></iconify-icon>
+                  </div>
+                  <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Illustrator</span>
+                </div>
+                <div class="flex gap-1 text-gold text-sm">
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                    <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/1d29fe94ec72d7ca49f355276f7bd4a9e272dec9/Procreate%20File.png" alt="Procreate" class="w-7 h-7 object-contain">
+                  </div>
+                  <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Procreate</span>
+                </div>
+                <div class="flex gap-1 text-gold text-sm">
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                    <iconify-icon icon="simple-icons:p5dotjs" class="text-[#ED225D] text-xl"></iconify-icon>
+                  </div>
+                  <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">OpenProcessing</span>
+                </div>
+                <div class="flex gap-1 text-gold text-sm">
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                    <iconify-icon icon="simple-icons:unity" class="text-dark text-xl"></iconify-icon>
+                  </div>
+                  <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Unity</span>
+                </div>
+                <div class="flex gap-1 text-gold text-sm">
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                    <iconify-icon icon="simple-icons:blender" class="text-[#F5792A] text-xl"></iconify-icon>
+                  </div>
+                  <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Blender</span>
+                </div>
+                <div class="flex gap-1 text-gold text-sm">
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                    <iconify-icon icon="simple-icons:figma" class="text-[#F24E1E] text-xl"></iconify-icon>
+                  </div>
+                  <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Figma</span>
+                </div>
+                <div class="flex gap-1 text-gold text-sm">
+                  <iconify-icon icon="solar:star-bold"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                  <iconify-icon icon="solar:star-linear"></iconify-icon>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+  </section>
+
+  <!-- Works / Magic Portal Section -->
+  <section id="works" class="py-24 px-6 relative z-10">
+    <div class="container mx-auto">
+      <div class="flex items-center gap-4 mb-20 gs-reveal">
+        <h2 class="font-serif text-4xl md:text-5xl">03 / 精選作品集</h2>
+        <div class="h-[1px] flex-grow bg-dark/20"></div>
+      </div>
+
+      <div class="space-y-32">
+        <!-- Work 1 -->
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div class="order-2 lg:order-1 space-y-6">
+            <div class="flex items-center gap-2 text-forest font-medium">
+              <iconify-icon icon="simple-icons:p5dotjs"></iconify-icon>
+              Creative Coding
+            </div>
+            <h3 class="font-serif text-3xl md:text-4xl">OpenProcessing <br>互動藝術</h3>
+            <p class="text-dark/70 font-light leading-relaxed">
+              運用 p5.js 架構編寫演算法，透過捕捉滑鼠與時間變數，即時生成極具視覺張力的煙燻繪畫筆刷效果。展現跨越傳統畫布的數位魔法。
+            </p>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">p5.js</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">JavaScript</span>
+            </div>
+          </div>
+          <div class="order-1 lg:order-2">
+            <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/d50456e6129a82d7e1c0e40e3250ee104a12899d/Fumage%20stroke.png" alt="Abstract Smoke Art" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+            </div>
+          </div>
+        </div>
+
+        <!-- Work 2 -->
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div class="order-1 lg:order-1">
+            <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/71a7c6c99d5b4230cb310077a71e7516d362ef99/DZ6_7537.jpg" alt="Warm Portrait of Illustrator" class="absolute inset-0 w-full h-full object-cover parallax-img" alt="Exhibition Design" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+            </div>
+          </div>
+          <div class="order-2 lg:order-2 space-y-6 lg:pl-10">
+            <div class="flex items-center gap-2 text-amber font-medium">
+              <iconify-icon icon="simple-icons:adobecreativecloud"></iconify-icon>
+              Visual Marketing
+            </div>
+            <h3 class="font-serif text-3xl md:text-4xl">我適文創專案</h3>
+            <p class="text-dark/70 font-light leading-relaxed">
+              從線上宣傳到線下體驗的完整視覺統籌。運用 Illustrator、PS 及 Canva 製作吸睛的活動宣傳圖片，並將主題視覺設計無縫延伸應用於實體展場佈置。
+            </p>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Illustrator</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Photoshop</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Canva</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Work 3 -->
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div class="order-2 lg:order-1 space-y-6">
+            <div class="flex items-center gap-2 text-coral font-medium">
+              <iconify-icon icon="simple-icons:procreate"></iconify-icon>
+              Illustration & Mural
+            </div>
+            <h3 class="font-serif text-3xl md:text-4xl">玉井國小專案</h3>
+            <p class="text-dark/70 font-light leading-relaxed">
+              為校園注入童話般的溫暖色彩。結合 Illustrator、Procreate 繪製充滿童趣的實體壁畫設計與活動宣傳圖，並包辦專案影片製作，全方位傳遞活動精神。
+            </p>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Procreate</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Illustrator</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Video Editing</span>
+            </div>
+          </div>
+          <div class="order-1 lg:order-2">
+            <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/71a7c6c99d5b4230cb310077a71e7516d362ef99/S__7823362.jpg" alt="Kids Mural Art" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+            </div>
+          </div>
+        </div>
+
+        <!-- Work 4 -->
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div class="order-1 lg:order-1">
+            <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/d85b6855878b392e850bf5376fd62511d48258e2/AR_Soup.gif" alt="AR 3D Interactive" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+            </div>
+          </div>
+          <div class="order-2 lg:order-2 space-y-6 lg:pl-10">
+            <div class="flex items-center gap-2 text-[#808080] font-medium">
+              <iconify-icon icon="simple-icons:unity"></iconify-icon>
+              3D / AR
+            </div>
+            <h3 class="font-serif text-3xl md:text-4xl">AR space <br>擴增實境</h3>
+            <p class="text-dark/70 font-light leading-relaxed">
+              打破虛實邊界。使用 Unity 引擎製作，結合 3D 建模技術，呈現出流暢且具備互動性的擴增實境 (AR) 視覺效果模型。
+            </p>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Unity</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Blender</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Styly</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Work 5 -->
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div class="order-2 lg:order-1 space-y-6">
+            <div class="flex items-center gap-2 text-[#3DDC84] font-medium">
+              <iconify-icon icon="simple-icons:android"></iconify-icon>
+              Mobile Dev
+            </div>
+            <h3 class="font-serif text-3xl md:text-4xl">安卓手機小遊戲<br>— Dodge</h3>
+            <p class="text-dark/70 font-light leading-relaxed">
+              跨足前端互動邏輯的嘗試。這是一款基於 Android 環境開發的手機遊戲專案，考驗玩家的反應速度，同時實踐了流暢的 UI 狀態管理與觸控反饋。
+            </p>
+            <div class="flex flex-wrap gap-2 pt-2">
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Android Studio</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Unity</span>
+              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Game UI</span>
+            </div>
+          </div>
+          <div class="order-1 lg:order-2">
+            <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/3e8e9e15cad50c0f861a6da8d228e47a5a8ffedd/DodgeGame.png" alt="Mobile Phone Game" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-20 relative z-10 bg-dark text-cream mt-20 rounded-t-[3rem] overflow-hidden">
+    <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#FAF8F5 1px, transparent 1px), linear-gradient(90deg, #FAF8F5 1px, transparent 1px); background-size: 4vw 4vw;"></div>
+
+    <div class="container mx-auto px-6 text-center space-y-12 relative z-10">
+      <h2 class="font-serif text-5xl md:text-7xl italic text-gold">如何聯繫？</h2>
+
+      <p class="font-light text-cream/70 max-w-lg mx-auto">
+        無論是 UI/UX 設計、視覺行銷或互動藝術作品。<br>讓我們一起創造美好的事物。
+      </p>
+
+      <div class="flex flex-col items-center gap-6">
+        <div class="flex flex-col items-center gap-8 relative z-10">
+
+          <div class="flex items-center gap-3 text-2xl font-serif text-cream pb-1 border-b border-gold/30">
+            <iconify-icon icon="solar:phone-calling-bold-duotone" class="text-gold"></iconify-icon>
+            <span class="select-text cursor-text">0966-818-753</span>
+          </div>
+
+          <div class="flex items-center gap-3 text-2xl font-serif text-cream pb-1 border-b border-gold/30">
+            <iconify-icon icon="solar:letter-bold-duotone" class="text-gold"></iconify-icon>
+            <span class="select-text cursor-text">liurong8427@gmail.com</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-10 flex justify-center gap-6 text-cream/50">
+        <p class="text-sm">© 2026 Yu-Rong Liu. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // 1. Custom Cursor Logic
+    const dot = document.querySelector('.cursor-dot');
+    const outline = document.querySelector('.cursor-outline');
+    const hoverTriggers = document.querySelectorAll('.hover-trigger');
+    window.addEventListener('mousemove', (e) => {
+      const posX = e.clientX;
+      const posY = e.clientY;
+      // Dot follows instantly
+      dot.style.transform = `translate(${posX}px, ${posY}px)`;
+      // Outline follows with slight delay
+      outline.animate({
+        transform: `translate(${posX}px, ${posY}px)`
+      }, {
+        duration: 500,
+        fill: "forwards"
+      });
+    });
+    hoverTriggers.forEach(trigger => {
+      trigger.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+      trigger.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+    });
+    // 2. GSAP Animations
+    gsap.registerPlugin(ScrollTrigger);
+    // Hero Init Animation
+    const heroTl = gsap.timeline();
+    heroTl.fromTo('.hero-fade', {
+      y: 30,
+      opacity: 0
+    }, {
+      y: 0,
+      opacity: 1,
+      duration: 1,
+      stagger: 0.15,
+      ease: 'power3.out',
+      delay: 0.5
+    });
+    // Magic Portal Slice Reveal
+    gsap.utils.toArray('.magic-portal').forEach(portal => {
+      gsap.fromTo(portal, {
+        clipPath: 'inset(100% 0 0 0 round 4rem)'
+      }, {
+        clipPath: 'inset(0% 0 0 0 round 4rem)',
+        duration: 1.5,
+        ease: 'power4.inOut',
+        scrollTrigger: {
+          trigger: portal,
+          start: 'top 85%',
+        }
+      });
+    });
+    // Image Parallax within Portals
+    gsap.utils.toArray('.parallax-img').forEach(img => {
+      gsap.to(img, {
+        yPercent: 15,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: img.parentElement,
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true
+        }
+      });
+    });
+    // General Reveal
+    gsap.utils.toArray('.gs-reveal').forEach(elem => {
+      gsap.fromTo(elem, {
+        y: 40,
+        opacity: 0
+      }, {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: elem,
+          start: 'top 85%'
+        }
+      });
+    });
+    // CSS Floating Animation via JS setup
+    gsap.to('.floating-anim', {
+      y: -15,
+      duration: 2,
+      yoyo: true,
+      repeat: -1,
+      ease: 'sine.inOut'
+    });
+    gsap.to('.floating-anim-delayed', {
+      y: -15,
+      duration: 2.2,
+      yoyo: true,
+      repeat: -1,
+      ease: 'sine.inOut',
+      delay: 0.5
+    });
+    // 3. WebGL Background (Warm Breeze / Ethereal Iris Fluid)
+    const canvas = document.getElementById('webgl-canvas');
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    // Shader Material
+    const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+    const fragmentShader = `
+            uniform float u_time;
+            uniform vec2 u_resolution;
+            uniform vec2 u_mouse;
+            varying vec2 vUv;
+
+            // Simplex Noise Function
+            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+            vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+            float snoise(vec2 v) {
+                const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+                vec2 i  = floor(v + dot(v, C.yy) );
+                vec2 x0 = v -   i + dot(i, C.xx);
+                vec2 i1;
+                i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+                vec4 x12 = x0.xyxy + C.xxzz;
+                x12.xy -= i1;
+                i = mod289(i);
+                vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+                vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+                m = m*m ;
+                m = m*m ;
+                vec3 x = 2.0 * fract(p * C.www) - 1.0;
+                vec3 h = abs(x) - 0.5;
+                vec3 ox = floor(x + 0.5);
+                vec3 a0 = x - ox;
+                m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+                vec3 g;
+                g.x  = a0.x  * x0.x  + h.x  * x0.y;
+                g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+                return 130.0 * dot(m, g);
+            }
+
+            void main() {
+                vec2 st = gl_FragCoord.xy/u_resolution.xy;
+                st.x *= u_resolution.x/u_resolution.y;
+
+                // Mouse interaction distance
+                vec2 mouse = u_mouse / u_resolution.xy;
+                mouse.x *= u_resolution.x/u_resolution.y;
+                float dist = distance(st, mouse);
+                float influence = smoothstep(0.8, 0.0, dist);
+
+                // Fluid distortion
+                vec2 pos = st * 2.0;
+                float n = snoise(pos + u_time * 0.1);
+                float n2 = snoise(pos + u_time * 0.15 + influence * 2.0);
+                
+                // Color Palette (Warm Cream, Honey Gold, Coral Pink)
+                vec3 color1 = vec3(250.0/255.0, 248.0/255.0, 245.0/255.0); // Cream #FAF8F5
+                vec3 color2 = vec3(245.0/255.0, 176.0/255.0, 65.0/255.0); // Honey #F5B041
+                vec3 color3 = vec3(241.0/255.0, 148.0/255.0, 138.0/255.0); // Coral #F1948A
+
+                float mixFactor = smoothstep(-1.0, 1.0, n + n2 * 0.5);
+                
+                // Base blend
+                vec3 finalColor = mix(color1, color2, mixFactor * 0.15);
+                
+                // Add Coral near mouse
+                finalColor = mix(finalColor, color3, influence * 0.15 * n2);
+
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        `;
+    const uniforms = {
+      u_time: {
+        value: 0.0
+      },
+      u_resolution: {
+        value: new THREE.Vector2(window.innerWidth, window.innerHeight)
+      },
+      u_mouse: {
+        value: new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2)
+      }
+    };
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const material = new THREE.ShaderMaterial({
+      vertexShader,
+      fragmentShader,
+      uniforms
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+    // Track Mouse for WebGL
+    window.addEventListener('mousemove', (e) => {
+      // Convert to WebGL coordinates (y inverted)
+      uniforms.u_mouse.value.x = e.clientX;
+      uniforms.u_mouse.value.y = window.innerHeight - e.clientY;
+    });
+    // Resize handler
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+    });
+    // Animation Loop
+    const clock = new THREE.Clock();
+
+    function animateWebGL() {
+      uniforms.u_time.value = clock.getElapsedTime();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animateWebGL);
+    }
+    animateWebGL();
+  </script>
