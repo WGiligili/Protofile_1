@@ -1,163 +1,157 @@
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yu-Rong | 前端與視覺設計</title>
 
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          cream: '#FAF8F5',
-          gold: '#D4AF37',
-          honey: '#F5B041',
-          amber: '#EB984E',
-          coral: '#F1948A',
-          forest: '#2A9D8F',
-          dark: '#2C2A29',
-          parchment: '#EFEBE1'
-        },
-        fontFamily: {
-          serif: ['Lora', 'serif'],
-          sans: ['Poppins', 'sans-serif']
-        },
-        transitionTimingFunction: {
-          'expo': 'cubic-bezier(0.19, 1, 0.22, 1)',
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            cream: '#FAF8F5',
+            gold: '#D4AF37',
+            honey: '#F5B041',
+            amber: '#EB984E',
+            coral: '#F1948A',
+            forest: '#2A9D8F',
+            dark: '#2C2A29',
+            parchment: '#EFEBE1'
+          },
+          fontFamily: {
+            serif: ['Lora', 'serif'],
+            sans: ['Poppins', 'sans-serif']
+          },
+          transitionTimingFunction: {
+            'expo': 'cubic-bezier(0.19, 1, 0.22, 1)',
+          }
         }
       }
     }
-  }
-</script>
+  </script>
 
-<!-- Iconify -->
-<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Iconify -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 
-<!-- GSAP & Three.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- GSAP & Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-<style>
-  :root {
-    --cursor-size: 20px;
-  }
+  <style>
+    :root {
+      --cursor-size: 20px;
+    }
 
-  body {
-    background-color: #FAF8F5;
-    color: #2C2A29;
-    overflow-x: hidden;
-    cursor: none;
-  }
+    body {
+      background-color: #FAF8F5;
+      color: #2C2A29;
+      overflow-x: hidden;
+      cursor: none;
+    }
 
-  /* WebGL Background */
-  #webgl-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -2;
-    pointer-events: none;
-  }
+    /* WebGL Background */
+    #webgl-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -2;
+      pointer-events: none;
+    }
 
-  /* Vague Parchment GridLines */
-  .grid-lines {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image:
-      linear-gradient(rgba(44, 42, 41, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(44, 42, 41, 0.04) 1px, transparent 1px);
-    background-size: 8vw 8vw;
-    z-index: -1;
-    pointer-events: none;
-  }
+    /* Vague Parchment GridLines */
+    .grid-lines {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image:
+        linear-gradient(rgba(44, 42, 41, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(44, 42, 41, 0.04) 1px, transparent 1px);
+      background-size: 8vw 8vw;
+      z-index: -1;
+      pointer-events: none;
+    }
 
-  /* Global Noise Texture */
-  .noise-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    opacity: 0.4;
-    z-index: 9998;
-    pointer-events: none;
-    background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.15"/%3E%3C/svg%3E');
-  }
+    /* Global Noise Texture */
+    .noise-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      opacity: 0.4;
+      z-index: 9998;
+      pointer-events: none;
+      background: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.15"/%3E%3C/svg%3E');
+    }
 
-  /* Custom Cursor */
-  .cursor-dot,
-  .cursor-outline {
-    position: fixed;
-    top: 0;
-    left: 0;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    z-index: 9999;
-    pointer-events: none;
-  }
+    /* Custom Cursor */
+    .cursor-dot,
+    .cursor-outline {
+      position: fixed;
+      top: 0;
+      left: 0;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      z-index: 9999;
+      pointer-events: none;
+    }
 
-  .cursor-dot {
-    width: 8px;
-    height: 8px;
-    background-color: #D4AF37;
-    transition: width 0.2s, height 0.2s;
-  }
+    .cursor-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #D4AF37;
+      transition: width 0.2s, height 0.2s;
+    }
 
-  .cursor-outline {
-    width: 40px;
-    height: 40px;
-    border: 1px solid rgba(212, 175, 55, 0.6);
-    transition: width 0.2s, height 0.2s, background-color 0.2s;
-    mix-blend-mode: difference;
-  }
+    .cursor-outline {
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(212, 175, 55, 0.6);
+      transition: width 0.2s, height 0.2s, background-color 0.2s;
+      mix-blend-mode: difference;
+    }
 
-  /* Hover state */
-  body.hovering .cursor-outline {
-    width: 60px;
-    height: 60px;
-    background-color: rgba(241, 148, 138, 0.2);
-    border-color: transparent;
-    backdrop-filter: blur(2px);
-  }
+    body.hovering .cursor-outline {
+      width: 60px;
+      height: 60px;
+      background-color: rgba(241, 148, 138, 0.2);
+      border-color: transparent;
+      backdrop-filter: blur(2px);
+    }
 
-  /* Typography & Utils */
-  .text-outline {
-    -webkit-text-stroke: 1px rgba(44, 42, 41, 0.2);
-    color: transparent;
-  }
+    .text-outline {
+      -webkit-text-stroke: 1px rgba(44, 42, 41, 0.2);
+      color: transparent;
+    }
 
-  .glass-panel {
-    background: rgba(250, 248, 245, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.5);
-  }
+    .glass-panel {
+      background: rgba(250, 248, 245, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
 
-  /* Magic Portal Clipping */
-  .magic-portal {
-    clip-path: inset(100% 0 0 0 round 4rem);
-    will-change: clip-path, transform;
-  }
+    /* 移除原本寫死的 clip-path，交由 GSAP 控制，避免圖片消失 */
+    .magic-portal {
+      will-change: clip-path, transform;
+    }
 
-  /* Hide scrollbar for clean look */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #EFEBE1;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #EB984E;
-    border-radius: 4px;
-  }
-</style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #EFEBE1; }
+    ::-webkit-scrollbar-thumb { background: #EB984E; border-radius: 4px; }
+  </style>
 </head>
 
 <body class="antialiased font-sans selection:bg-coral selection:text-white">
@@ -172,19 +166,16 @@
   <div class="cursor-outline"></div>
 
   <!-- Navigation -->
-  <nav class="fixed w-full top-0 z-50 glass-panel px-6 py-4 flex justify-between items-center transition-all duration-300">
+  <nav id="navbar" class="fixed w-full top-0 z-50 px-6 py-4 flex justify-between items-center transition-all duration-300">
     <div class="font-serif text-xl font-medium tracking-wide text-dark hover-trigger flex items-center gap-2">
       <iconify-icon icon="solar:magic-stick-3-bold-duotone" class="text-gold text-2xl"></iconify-icon>
       Yu-Rong.
     </div>
-    <div class="hidden md:flex gap-8 text-sm font-medium tracking-widest uppercase">
+    <div class="hidden md:flex gap-8 text-sm font-medium tracking-widest uppercase bg-white/40 backdrop-blur-md px-8 py-3 rounded-full border border-white/50 shadow-sm">
       <a href="#about" class="hover:text-amber transition-colors hover-trigger">關於我</a>
       <a href="#skills" class="hover:text-amber transition-colors hover-trigger">技能</a>
       <a href="#works" class="hover:text-amber transition-colors hover-trigger">專案</a>
     </div>
-    <!--  <a href="#works" class="px-5 py-2 rounded-full bg-dark text-cream text-sm font-medium hover:bg-gold transition-colors duration-300 hover-trigger">
-            Let's Talk
-        </a>-->
   </nav>
 
   <!-- Hero Section -->
@@ -202,8 +193,8 @@
             AI數位輔助魔法
           </div>
           <h1 class="font-serif text-5xl md:text-7xl font-medium leading-[1.1] text-dark hero-fade">
-            <span class="italic text-gold">視覺設計 </span> <br>
-             &前端設計
+            <span class="italic text-gold">視覺設計 &</span> 
+            <br>前端設計
           </h1>
         </div>
 
@@ -222,13 +213,8 @@
 
       <!-- Magic Portal Hero Image -->
       <div class="relative flex justify-center lg:justify-end hero-fade">
-        <!-- <div class="image-upload-container">                      
-                    <img id="previewImage" src="預設的溫暖插畫.jpg" alt="我的作品預覽" >    
-                    <input type="file" id="imageInput" accept="image/*">                
-                </div>-->
         <div class="relative w-[80%] max-w-md aspect-[3/4] rounded-t-[10rem] rounded-b-[2rem] overflow-hidden shadow-2xl shadow-gold/20 magic-portal" id="hero-portal">
-
-          <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/0e7466404061215fdc8a0867e7b3ed1c8b78780a/AI-IMG2.jpg" class="w-full h-[80%] object-cover scale-[1.1] transition-transform duration-500">
+          <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/main/AI-IMG2.jpg" class="w-full h-full object-cover scale-[1.1] parallax-img">
           <div class="absolute inset-0 bg-gradient-to-t from-dark/60 to-transparent"></div>
           <div class="absolute bottom-6 left-6 right-6 text-cream">
             <p class="font-serif text-xl">前端學習者</p>
@@ -237,10 +223,10 @@
         </div>
 
         <!-- Floating Elements -->
-        <div class="absolute top-10 right-0 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl floating-anim">
+        <div class="absolute top-10 right-0 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl floating-anim hover-trigger">
           <iconify-icon icon="simple-icons:figma" class="text-3xl text-[#F24E1E]"></iconify-icon>
         </div>
-        <div class="absolute bottom-6 -left-6 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl floating-anim-delayed">
+        <div class="absolute bottom-6 -left-6 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl floating-anim-delayed hover-trigger">
           <iconify-icon icon="simple-icons:procreate" class="text-3xl text-dark"></iconify-icon>
         </div>
       </div>
@@ -251,7 +237,6 @@
   <section id="about" class="py-24 px-6 relative z-10">
     <div class="container mx-auto">
       <div class="grid grid-cols-1 flex flex-col gap-16">
-
         <!-- About Content -->        
         <div class="lg:col-span-5 space-y-8 gs-reveal">
           <div class="flex items-center gap-4">
@@ -264,34 +249,21 @@
           <p class="text-lg leading-relaxed text-dark/80 font-light">
             現在，我正積極精進邏輯思維，朝向 <strong class="text-amber font-medium">前端設計領域</strong> 邁進。期許能將感性的插畫美學，注入理性的介面體驗中，創造出既有溫度又實用的數位產品。
           </p>
-
-          <div class="flex gap-4 pt-4">
-            <!--<div class="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:bg-gold hover:text-white transition-colors hover-trigger">
-              
-              <iconify-icon icon="simple-icons:behance" class="text-xl"></iconify-icon>
-            </div>
-            <div class="w-12 h-12 rounded-full glass-panel flex items-center justify-center hover:bg-gold hover:text-white transition-colors hover-trigger">
-              <iconify-icon icon="simple-icons:pinterest" class="text-xl"></iconify-icon>
-            </div>
-
-          </div>-->
         </div>
 
         <!-- Skills -->   
-        
         <div id="skills" class="gs-reveal space-y-8">
           <div class="flex items-center gap-4">
             <h2 class="font-serif text-4xl md:text-5xl">02 / 專業技能</h2>
             <div class="h-[1px] flex-grow bg-dark/20"></div>
           </div>
      
-          
           <div class="glass-panel p-8 md:p-12 rounded-[2rem] shadow-lg shadow-amber/5">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
-
-              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+              <!-- Skill Item -->
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4 hover-trigger cursor-pointer">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center group-hover:-translate-y-1 transition-transform">
                     <iconify-icon icon="simple-icons:adobeillustrator" class="text-[#FF9A00] text-xl"></iconify-icon>
                   </div>
                   <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Illustrator</span>
@@ -304,11 +276,12 @@
                   <iconify-icon icon="solar:star-linear"></iconify-icon>
                 </div>
               </div>
-
-              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+              
+              <!-- Skill Item -->
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4 hover-trigger cursor-pointer">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
-                    <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/1d29fe94ec72d7ca49f355276f7bd4a9e272dec9/Procreate%20File.png" alt="Procreate" class="w-7 h-7 object-contain">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center group-hover:-translate-y-1 transition-transform">
+                    <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/main/Procreate%20File.png" alt="Procreate" class="w-7 h-7 object-contain">
                   </div>
                   <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Procreate</span>
                 </div>
@@ -321,9 +294,10 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+              <!-- Skill Item -->
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4 hover-trigger cursor-pointer">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center group-hover:-translate-y-1 transition-transform">
                     <iconify-icon icon="simple-icons:p5dotjs" class="text-[#ED225D] text-xl"></iconify-icon>
                   </div>
                   <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">OpenProcessing</span>
@@ -337,9 +311,10 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+              <!-- Skill Item -->
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4 hover-trigger cursor-pointer">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center group-hover:-translate-y-1 transition-transform">
                     <iconify-icon icon="simple-icons:unity" class="text-dark text-xl"></iconify-icon>
                   </div>
                   <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Unity</span>
@@ -353,9 +328,10 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+              <!-- Skill Item -->
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4 hover-trigger cursor-pointer">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center group-hover:-translate-y-1 transition-transform">
                     <iconify-icon icon="simple-icons:blender" class="text-[#F5792A] text-xl"></iconify-icon>
                   </div>
                   <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Blender</span>
@@ -369,9 +345,10 @@
                 </div>
               </div>
 
-              <div class="flex items-center justify-between group border-b border-dark/5 pb-4">
+              <!-- Skill Item -->
+              <div class="flex items-center justify-between group border-b border-dark/5 pb-4 hover-trigger cursor-pointer">
                 <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center">
+                  <div class="w-10 h-10 rounded-xl bg-white shadow flex items-center justify-center group-hover:-translate-y-1 transition-transform">
                     <iconify-icon icon="simple-icons:figma" class="text-[#F24E1E] text-xl"></iconify-icon>
                   </div>
                   <span class="font-medium text-dark group-hover:text-amber transition-colors text-lg">Figma</span>
@@ -388,8 +365,10 @@
             </div>
           </div>
         </div>
-  </div>
-</section>
+      </div>
+    </div>
+  </section>
+
   <!-- Works / Magic Portal Section -->
   <section id="works" class="py-24 px-6 relative z-10">
     <div class="container mx-auto">
@@ -400,123 +379,163 @@
 
       <div class="space-y-32">
         <!-- Work 1 -->
-        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center gs-reveal">
           <div class="order-2 lg:order-1 space-y-6">
             <div class="flex items-center gap-2 text-forest font-medium">
-              <iconify-icon icon="simple-icons:p5dotjs"></iconify-icon>
+              <iconify-icon icon="solar:code-circle-bold-duotone" class="text-xl"></iconify-icon>
               Creative Coding
             </div>
             <h3 class="font-serif text-3xl md:text-4xl">OpenProcessing <br>互動藝術</h3>
             <p class="text-dark/70 font-light leading-relaxed">
-              運用 p5.js 架構編寫演算法，透過捕捉滑鼠與時間變數，即時生成極具視覺張力的煙燻繪畫筆刷效果。展現跨越傳統畫布的數位魔法。
+              運用 p5.js 架構編寫演算法，透過捕捉滑鼠與時間變數，即時生成煙燻繪畫筆刷定點時的效果。展現跨越傳統畫布的數位魔法。
             </p>
-            <div class="flex flex-wrap gap-2 pt-2">
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">p5.js</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">JavaScript</span>
+            <div class="flex flex-wrap gap-3 pt-2">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:p5dotjs" class="text-[#ED225D] text-sm"></iconify-icon>
+                p5.js
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:javascript" class="text-[#F7DF1E] text-sm"></iconify-icon>
+                JavaScript
+              </div>
             </div>
           </div>
           <div class="order-1 lg:order-2">
             <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
-              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/d50456e6129a82d7e1c0e40e3250ee104a12899d/Fumage%20stroke.png" alt="Abstract Smoke Art" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/main/Fumage%20stroke.png" alt="Abstract Smoke Art" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
             </div>
           </div>
         </div>
 
         <!-- Work 2 -->
-        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center gs-reveal">
           <div class="order-1 lg:order-1">
             <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
-              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/1d29fe94ec72d7ca49f355276f7bd4a9e272dec9/DZ6_7537.jpg" alt="Warm Portrait of Illustrator" class="absolute inset-0 w-full h-full object-cover parallax-img" alt="Exhibition Design" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
-             
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/main/DZ6_7537.jpg" alt="Warm Portrait of Illustrator" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
             </div>
           </div>
           <div class="order-2 lg:order-2 space-y-6 lg:pl-10">
             <div class="flex items-center gap-2 text-amber font-medium">
-              <iconify-icon icon="simple-icons:adobecreativecloud"></iconify-icon>
+              <iconify-icon icon="solar:gallery-bold-duotone" class="text-xl"></iconify-icon>
               Visual Marketing
             </div>
-            <h3 class="font-serif text-3xl md:text-4xl">我適文創專案</h3>
+            <h3 class="font-serif text-3xl md:text-4xl">我適文創<br>Miffy & Moomin 展場</h3>
             <p class="text-dark/70 font-light leading-relaxed">
               從線上宣傳到線下體驗的完整視覺統籌。運用 Illustrator、PS 及 Canva 製作吸睛的活動宣傳圖片，並將主題視覺設計無縫延伸應用於實體展場佈置。
             </p>
-            <div class="flex flex-wrap gap-2 pt-2">
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Illustrator</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Photoshop</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Canva</span>
+            <div class="flex flex-wrap gap-3 pt-2">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:adobeillustrator" class="text-[#FF9A00] text-sm"></iconify-icon>
+                Illustrator
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:adobephotoshop" class="text-[#31A8FF] text-sm"></iconify-icon>
+                Photoshop
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:canva" class="text-[#00C4CC] text-sm"></iconify-icon>
+                Canva
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Work 3 -->
-        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center gs-reveal">
           <div class="order-2 lg:order-1 space-y-6">
             <div class="flex items-center gap-2 text-coral font-medium">
-              <iconify-icon icon="simple-icons:procreate"></iconify-icon>
+              <iconify-icon icon="solar:palette-bold-duotone" class="text-xl"></iconify-icon>
               Illustration & Mural
             </div>
             <h3 class="font-serif text-3xl md:text-4xl">玉井國小專案</h3>
             <p class="text-dark/70 font-light leading-relaxed">
               為校園注入童話般的溫暖色彩。結合 Illustrator、Procreate 繪製充滿童趣的實體壁畫設計與活動宣傳圖，並包辦專案影片製作，全方位傳遞活動精神。
             </p>
-            <div class="flex flex-wrap gap-2 pt-2">
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Procreate</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Illustrator</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Video Editing</span>
+            <div class="flex flex-wrap gap-3 pt-2">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/main/Procreate%20File.png" class="w-3.5 h-3.5 object-contain">
+                Procreate
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:adobeillustrator" class="text-[#FF9A00] text-sm"></iconify-icon>
+                Illustrator
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="solar:videocamera-record-bold-duotone" class="text-coral text-sm"></iconify-icon>
+                Video Editing
+              </div>
             </div>
           </div>
           <div class="order-1 lg:order-2">
             <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
-              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/71a7c6c99d5b4230cb310077a71e7516d362ef99/S__7823362.jpg" alt="Kids Mural Art" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/main/S__7823362.jpg" alt="Kids Mural Art" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
             </div>
           </div>
         </div>
 
         <!-- Work 4 -->
-        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center gs-reveal">
           <div class="order-1 lg:order-1">
             <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
-              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/d85b6855878b392e850bf5376fd62511d48258e2/AR_Soup.gif" alt="AR 3D Interactive" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/main/AR_Soup.gif" alt="AR 3D Interactive" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
             </div>
           </div>
           <div class="order-2 lg:order-2 space-y-6 lg:pl-10">
             <div class="flex items-center gap-2 text-[#808080] font-medium">
-              <iconify-icon icon="simple-icons:unity"></iconify-icon>
+              <iconify-icon icon="solar:augmented-reality-bold-duotone" class="text-xl"></iconify-icon>
               3D / AR
             </div>
             <h3 class="font-serif text-3xl md:text-4xl">AR space <br>擴增實境</h3>
             <p class="text-dark/70 font-light leading-relaxed">
               打破虛實邊界。使用 Unity 引擎製作，結合 3D 建模技術，呈現出流暢且具備互動性的擴增實境 (AR) 視覺效果模型。
             </p>
-            <div class="flex flex-wrap gap-2 pt-2">
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Unity</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Blender</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Styly</span>
+            <div class="flex flex-wrap gap-3 pt-2">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:unity" class="text-dark text-sm"></iconify-icon>
+                Unity
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:blender" class="text-[#F5792A] text-sm"></iconify-icon>
+                Blender
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="solar:box-minimalistic-bold-duotone" class="text-gray-500 text-sm"></iconify-icon>
+                Styly
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Work 5 -->
-        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="work-item grid grid-cols-1 lg:grid-cols-2 gap-12 items-center gs-reveal">
           <div class="order-2 lg:order-1 space-y-6">
             <div class="flex items-center gap-2 text-[#3DDC84] font-medium">
-              <iconify-icon icon="simple-icons:android"></iconify-icon>
+              <iconify-icon icon="solar:smartphone-update-bold-duotone" class="text-xl"></iconify-icon>
               Mobile Dev
             </div>
             <h3 class="font-serif text-3xl md:text-4xl">安卓手機小遊戲<br>— Dodge</h3>
             <p class="text-dark/70 font-light leading-relaxed">
               跨足前端互動邏輯的嘗試。這是一款基於 Android 環境開發的手機遊戲專案，考驗玩家的反應速度，同時實踐了流暢的 UI 狀態管理與觸控反饋。
             </p>
-            <div class="flex flex-wrap gap-2 pt-2">
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Android Studio</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Unity</span>
-              <span class="px-3 py-1 text-xs border border-dark/20 rounded-full">Game UI</span>
+            <div class="flex flex-wrap gap-3 pt-2">
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:androidstudio" class="text-[#3DDC84] text-sm"></iconify-icon>
+                Android Studio
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="simple-icons:unity" class="text-dark text-sm"></iconify-icon>
+                Unity
+              </div>
+              <div class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-dark/10 bg-white/60 rounded-full">
+                <iconify-icon icon="solar:gamepad-bold-duotone" class="text-[#8B5CF6] text-sm"></iconify-icon>
+                Game UI
+              </div>
             </div>
           </div>
           <div class="order-1 lg:order-2">
             <div class="magic-portal w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-xl">
-              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/3e8e9e15cad50c0f861a6da8d228e47a5a8ffedd/DodgeGame.png" alt="Mobile Phone Game" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
+              <img src="https://raw.githubusercontent.com/WGiligili/portfolio-images/main/DodgeGame.png" alt="Mobile Phone Game" class="w-full h-full object-cover parallax-img hover-trigger scale-105">
             </div>
-
           </div>
         </div>
 
@@ -530,44 +549,73 @@
 
     <div class="container mx-auto px-6 text-center space-y-12 relative z-10">
       <h2 class="font-serif text-5xl md:text-7xl italic text-gold">如何聯繫？</h2>
-
       <p class="font-light text-cream/70 max-w-lg mx-auto">
         無論是 UI/UX 設計、視覺行銷或互動藝術作品。<br>讓我們一起創造美好的事物。
       </p>
 
       <div class="flex flex-col items-center gap-6">
         <div class="flex flex-col items-center gap-8 relative z-10">
-
-          <div class="flex items-center gap-3 text-2xl font-serif text-cream pb-1 border-b border-gold/30">
+          <div class="flex items-center gap-3 text-2xl font-serif text-cream pb-1 border-b border-gold/30 hover-trigger cursor-text">
             <iconify-icon icon="solar:phone-calling-bold-duotone" class="text-gold"></iconify-icon>
-            <span class="select-text cursor-text">0966-818-753</span>
+            <span class="select-text">0966-818-753</span>
           </div>
-
-          <div class="flex items-center gap-3 text-2xl font-serif text-cream pb-1 border-b border-gold/30">
+          <div class="flex items-center gap-3 text-2xl font-serif text-cream pb-1 border-b border-gold/30 hover-trigger cursor-text">
             <iconify-icon icon="solar:letter-bold-duotone" class="text-gold"></iconify-icon>
-            <span class="select-text cursor-text">liurong8427@gmail.com</span>
+            <span class="select-text">liurong8427@gmail.com</span>
           </div>
         </div>
       </div>
 
       <div class="pt-10 flex justify-center gap-6 text-cream/50">
-        <p class="text-sm">© 2026 Yu-Rong Liu. All rights reserved.</p>
+        <p class="text-sm">© 2024 Yu-Rong Liu. All rights reserved.</p>
       </div>
     </div>
   </footer>
 
+  <!-- 返回最上方按鈕 -->
+  <button id="backToTop" class="fixed bottom-8 right-8 w-14 h-14 bg-dark text-gold rounded-full shadow-lg shadow-dark/20 flex items-center justify-center z-[90] opacity-0 translate-y-10 pointer-events-none transition-all duration-500 hover:bg-gold hover:text-white hover:-translate-y-2 hover-trigger">
+    <iconify-icon icon="solar:alt-arrow-up-linear" class="text-2xl"></iconify-icon>
+  </button>
+
   <!-- Scripts -->
   <script>
+    // 0. Navbar & BackToTop Scroll Effects
+    const navbar = document.getElementById('navbar');
+    const backToTopBtn = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        navbar.classList.add('bg-cream/80', 'backdrop-blur-lg', 'shadow-sm');
+        navbar.classList.remove('py-4');
+        navbar.classList.add('py-2');
+      } else {
+        navbar.classList.remove('bg-cream/80', 'backdrop-blur-lg', 'shadow-sm');
+        navbar.classList.add('py-4');
+        navbar.classList.remove('py-2');
+      }
+
+      if (window.scrollY > window.innerHeight * 0.5) {
+        backToTopBtn.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+        backToTopBtn.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+      } else {
+        backToTopBtn.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none');
+        backToTopBtn.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+      }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
     // 1. Custom Cursor Logic
     const dot = document.querySelector('.cursor-dot');
     const outline = document.querySelector('.cursor-outline');
     const hoverTriggers = document.querySelectorAll('.hover-trigger');
+    
     window.addEventListener('mousemove', (e) => {
       const posX = e.clientX;
       const posY = e.clientY;
-      // Dot follows instantly
       dot.style.transform = `translate(${posX}px, ${posY}px)`;
-      // Outline follows with slight delay
       outline.animate({
         transform: `translate(${posX}px, ${posY}px)`
       }, {
@@ -575,13 +623,16 @@
         fill: "forwards"
       });
     });
+
     hoverTriggers.forEach(trigger => {
       trigger.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
       trigger.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
     });
+
     // 2. GSAP Animations
     gsap.registerPlugin(ScrollTrigger);
-    // Hero Init Animation
+    
+    // Hero Init Animation (保持觸發一次就好，比較自然)
     const heroTl = gsap.timeline();
     heroTl.fromTo('.hero-fade', {
       y: 30,
@@ -592,36 +643,42 @@
       duration: 1,
       stagger: 0.15,
       ease: 'power3.out',
-      delay: 0.5
+      delay: 0.2
     });
-    // Magic Portal Slice Reveal
+
+    // Magic Portal 圖片揭示特效 (重複觸發)
     gsap.utils.toArray('.magic-portal').forEach(portal => {
       gsap.fromTo(portal, {
         clipPath: 'inset(100% 0 0 0 round 4rem)'
       }, {
         clipPath: 'inset(0% 0 0 0 round 4rem)',
-        duration: 1.5,
-        ease: 'power4.inOut',
+        duration: 1.2,
+        ease: 'power3.inOut',
         scrollTrigger: {
           trigger: portal,
-          start: 'top 85%',
+          start: 'top 90%',
+          toggleActions: "play reverse play reverse"
         }
       });
     });
-    // Image Parallax within Portals
+
+    // 圖片內部視差 (Parallax)
     gsap.utils.toArray('.parallax-img').forEach(img => {
-      gsap.to(img, {
+      gsap.fromTo(img, {
+        yPercent: -10
+      }, {
         yPercent: 15,
         ease: 'none',
         scrollTrigger: {
           trigger: img.parentElement,
           start: 'top bottom',
           end: 'bottom top',
-          scrub: true
+          scrub: 1 
         }
       });
     });
-    // General Reveal
+
+    // General Reveal 文字動畫 (重複觸發)
     gsap.utils.toArray('.gs-reveal').forEach(elem => {
       gsap.fromTo(elem, {
         y: 40,
@@ -633,11 +690,13 @@
         ease: 'power3.out',
         scrollTrigger: {
           trigger: elem,
-          start: 'top 85%'
+          start: 'top 85%',
+          toggleActions: "play reverse play reverse"
         }
       });
     });
-    // CSS Floating Animation via JS setup
+
+    // CSS 懸浮動態
     gsap.to('.floating-anim', {
       y: -15,
       duration: 2,
@@ -653,7 +712,8 @@
       ease: 'sine.inOut',
       delay: 0.5
     });
-    // 3. WebGL Background (Warm Breeze / Ethereal Iris Fluid)
+
+    // 3. WebGL Background (保留原本的背景特效)
     const canvas = document.getElementById('webgl-canvas');
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -662,114 +722,97 @@
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    // Shader Material
+    
     const vertexShader = `
-            varying vec2 vUv;
-            void main() {
-                vUv = uv;
-                gl_Position = vec4(position, 1.0);
-            }
-        `;
-    const fragmentShader = `
-            uniform float u_time;
-            uniform vec2 u_resolution;
-            uniform vec2 u_mouse;
-            varying vec2 vUv;
-
-            // Simplex Noise Function
-            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-            vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-            vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
-            float snoise(vec2 v) {
-                const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
-                vec2 i  = floor(v + dot(v, C.yy) );
-                vec2 x0 = v -   i + dot(i, C.xx);
-                vec2 i1;
-                i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-                vec4 x12 = x0.xyxy + C.xxzz;
-                x12.xy -= i1;
-                i = mod289(i);
-                vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
-                vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
-                m = m*m ;
-                m = m*m ;
-                vec3 x = 2.0 * fract(p * C.www) - 1.0;
-                vec3 h = abs(x) - 0.5;
-                vec3 ox = floor(x + 0.5);
-                vec3 a0 = x - ox;
-                m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
-                vec3 g;
-                g.x  = a0.x  * x0.x  + h.x  * x0.y;
-                g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-                return 130.0 * dot(m, g);
-            }
-
-            void main() {
-                vec2 st = gl_FragCoord.xy/u_resolution.xy;
-                st.x *= u_resolution.x/u_resolution.y;
-
-                // Mouse interaction distance
-                vec2 mouse = u_mouse / u_resolution.xy;
-                mouse.x *= u_resolution.x/u_resolution.y;
-                float dist = distance(st, mouse);
-                float influence = smoothstep(0.8, 0.0, dist);
-
-                // Fluid distortion
-                vec2 pos = st * 2.0;
-                float n = snoise(pos + u_time * 0.1);
-                float n2 = snoise(pos + u_time * 0.15 + influence * 2.0);
-                
-                // Color Palette (Warm Cream, Honey Gold, Coral Pink)
-                vec3 color1 = vec3(250.0/255.0, 248.0/255.0, 245.0/255.0); // Cream #FAF8F5
-                vec3 color2 = vec3(245.0/255.0, 176.0/255.0, 65.0/255.0); // Honey #F5B041
-                vec3 color3 = vec3(241.0/255.0, 148.0/255.0, 138.0/255.0); // Coral #F1948A
-
-                float mixFactor = smoothstep(-1.0, 1.0, n + n2 * 0.5);
-                
-                // Base blend
-                vec3 finalColor = mix(color1, color2, mixFactor * 0.15);
-                
-                // Add Coral near mouse
-                finalColor = mix(finalColor, color3, influence * 0.15 * n2);
-
-                gl_FragColor = vec4(finalColor, 1.0);
-            }
-        `;
-    const uniforms = {
-      u_time: {
-        value: 0.0
-      },
-      u_resolution: {
-        value: new THREE.Vector2(window.innerWidth, window.innerHeight)
-      },
-      u_mouse: {
-        value: new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2)
+      varying vec2 vUv;
+      void main() {
+          vUv = uv;
+          gl_Position = vec4(position, 1.0);
       }
+    `;
+    const fragmentShader = `
+      uniform float u_time;
+      uniform vec2 u_resolution;
+      uniform vec2 u_mouse;
+      varying vec2 vUv;
+
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec3 permute(vec3 x) { return mod289(((x*34.0)+1.0)*x); }
+      float snoise(vec2 v) {
+          const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+          vec2 i  = floor(v + dot(v, C.yy) );
+          vec2 x0 = v -   i + dot(i, C.xx);
+          vec2 i1;
+          i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+          vec4 x12 = x0.xyxy + C.xxzz;
+          x12.xy -= i1;
+          i = mod289(i);
+          vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+          vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+          m = m*m ;
+          m = m*m ;
+          vec3 x = 2.0 * fract(p * C.www) - 1.0;
+          vec3 h = abs(x) - 0.5;
+          vec3 ox = floor(x + 0.5);
+          vec3 a0 = x - ox;
+          m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+          vec3 g;
+          g.x  = a0.x  * x0.x  + h.x  * x0.y;
+          g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+          return 130.0 * dot(m, g);
+      }
+
+      void main() {
+          vec2 st = gl_FragCoord.xy/u_resolution.xy;
+          st.x *= u_resolution.x/u_resolution.y;
+
+          vec2 mouse = u_mouse / u_resolution.xy;
+          mouse.x *= u_resolution.x/u_resolution.y;
+          float dist = distance(st, mouse);
+          float influence = smoothstep(0.8, 0.0, dist);
+
+          vec2 pos = st * 2.0;
+          float n = snoise(pos + u_time * 0.1);
+          float n2 = snoise(pos + u_time * 0.15 + influence * 2.0);
+          
+          vec3 color1 = vec3(250.0/255.0, 248.0/255.0, 245.0/255.0);
+          vec3 color2 = vec3(245.0/255.0, 176.0/255.0, 65.0/255.0);
+          vec3 color3 = vec3(241.0/255.0, 148.0/255.0, 138.0/255.0);
+
+          float mixFactor = smoothstep(-1.0, 1.0, n + n2 * 0.5);
+          vec3 finalColor = mix(color1, color2, mixFactor * 0.15);
+          finalColor = mix(finalColor, color3, influence * 0.15 * n2);
+
+          gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+    
+    const uniforms = {
+      u_time: { value: 0.0 },
+      u_resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+      u_mouse: { value: new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2) }
     };
+    
     const geometry = new THREE.PlaneGeometry(2, 2);
-    const material = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms
-    });
+    const material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms });
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
-    // Track Mouse for WebGL
+    
     window.addEventListener('mousemove', (e) => {
-      // Convert to WebGL coordinates (y inverted)
       uniforms.u_mouse.value.x = e.clientX;
       uniforms.u_mouse.value.y = window.innerHeight - e.clientY;
     });
-    // Resize handler
+    
     window.addEventListener('resize', () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
       uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
     });
-    // Animation Loop
+    
     const clock = new THREE.Clock();
-
     function animateWebGL() {
       uniforms.u_time.value = clock.getElapsedTime();
       renderer.render(scene, camera);
@@ -777,3 +820,5 @@
     }
     animateWebGL();
   </script>
+</body>
+</html>
